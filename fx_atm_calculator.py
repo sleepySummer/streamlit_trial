@@ -148,4 +148,3 @@ def show_atm_calculator():
             "Put Payoff (pips)": put_payoff,
             "Straddle Net (pips)": straddle_payoff
         })
-        st.dataframe(df_payoff.style.format("{:.2f}"), use_container_width=True)

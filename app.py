@@ -8,6 +8,7 @@ from datetime import datetime
 from mortgage_calculator import show_calculator
 from fx_forward_calculator import show_fx_calculator 
 from fx_atm_calculator import show_atm_calculator 
+from stock_option_calculator import show_stock_option_calculator
 
 # ──────────────登入系統模組───────────
 import streamlit_authenticator as stauth
@@ -47,7 +48,12 @@ if st.session_state["authentication_status"]:
     # 建立應用程式選單
     app_mode = st.sidebar.radio(
         "請選擇你要使用的計算機：",
-        ["Mortgage Calculator", "FX Forward Calculator", "FX ATM Calculator"]
+        [
+            "Mortgage Calculator", 
+            "FX Forward Calculator", 
+            "FX ATM Option Calculator",
+            "Stock/ETF Option Calculator"
+        ]
     )
 
     st.sidebar.markdown("---")
@@ -57,8 +63,11 @@ if st.session_state["authentication_status"]:
         show_calculator()
     elif app_mode == "FX Forward Calculator":
         show_fx_calculator()
-    elif app_mode == "FX ATM Calculator":
+    elif app_mode == "FX ATM Option Calculator":
         show_atm_calculator()
+    elif app_mode == "Stock/ETF Option Calculator":
+        show_stock_option_calculator()
+        
 elif st.session_state["authentication_status"] is False:
     st.error('帳號或密碼錯誤')
 elif st.session_state["authentication_status"] is None:
