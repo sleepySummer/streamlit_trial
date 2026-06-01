@@ -73,6 +73,63 @@ def calculate_fx_vanilla(spot, strike, dte, dom_rate, for_rate, iv, notional):
         "exp_rd": exp_rd, "exp_rf": exp_rf
     }
 
+def show_vol_smile_module():
+    st.write("### FX Volatility Smile (Vanna-Volga Approximation)")
+    st.caption("透過輸入交易台常見的 ATM, Risk Reversal (RR) 與 Butterfly (FLY) 重建波動率微笑曲線。")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        atm_vol = st.number_input("ATM Volatility (%)", value=6.406, step=0.1, format="%.3f")
+    with col2:
+        rr_25d = st.number_input("25D Risk Reversal (RR) %", value=-0.971, step=0.1, format="%.3f", help="RR = Call Vol - Put Vol. 負值代表 Put 較貴 (偏斜向下)。")
+    with col3:
+        fly_25d = st.number_input("25D Butterfly (FLY) %", value=0.382, step=0.1, format="%.3f", help="FLY 決定兩端尾部的肥厚程度 (微笑的深度)。")
+
+    # Vanna-Volga 簡化推算 25D Put 與 25D Call 的絕對波動率
+    vol_25d_put = atm_vol + fly_25d - (rr_25d / 2)
+    vol_25d_call = atm_vol + fly_25d + (rr_25d / 2)
+    
+    st.markdown("#### Calculated Absolute Volatility")
+    r1, r2, r3 = st.columns(3)
+    r1.metric("25D Put Vol", f"{vol_25d_put:.3f}%")
+    r2.metric("ATM Vol", f"{atm_vol:.3f}%")
+    r3.metric("25D Call Vol", f"{vol_25d_call:.3f}%")
+
+    # 繪圖邏輯：設定 3 個錨點 (Delta 25, 50, 75)
+    x_points = np.array([25, 50, 75])
+    y_points = np.array([vol_25d_put, atm_vol, vol_25d_call])
+    
+    # 使用 Numpy polyfit 建立二階多項式 (U型曲線)
+    z = np.polyfit(x_points, y_points, 2)
+    p = np.poly1d(z)
+    
+    # 生成平滑的 X 軸數據點 (Delta 從 10 到 90)
+    x_smooth = np.linspace(10, 90, 100)
+    y_smooth = p(x_smooth)
+
+    # Plotly 視覺化
+    fig = go.Figure()
+    
+    # 畫平滑曲線
+    fig.add_trace(go.Scatter(x=x_smooth, y=y_smooth, mode='lines', name='Smile Curve', line=dict(color='#00AEEF', width=2)))
+    
+    # 畫 3 個核心錨點
+    fig.add_trace(go.Scatter(x=x_points, y=y_points, mode='markers+text', name='Market Quotes',
+                             marker=dict(color='#E53935', size=10),
+                             text=[f"{vol_25d_put:.2f}", f"{atm_vol:.2f}", f"{vol_25d_call:.2f}"],
+                             textposition="top center"))
+
+    # 自訂圖表樣式 (對齊交易終端機習慣，左邊是 Put，右邊是 Call)
+    fig.update_layout(
+        xaxis_title="Delta (25D Put ← ATM → 25D Call)",
+        yaxis_title="Implied Volatility (%)",
+        xaxis=dict(tickmode='array', tickvals=[25, 50, 75], ticktext=['25D Put', 'ATM', '25D Call']),
+        hovermode="x unified",
+        margin=dict(l=0, r=0, t=30, b=0)
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
 def show_vanilla_calculator():
     st.title("FX Vanilla Option Calculator")
     st.caption("驗證基準：USD/JPY Put, Premium & Cash Greeks in USD")
@@ -167,3 +224,12 @@ def show_vanilla_calculator():
     
     fig.update_layout(xaxis_title="Spot Rate", yaxis_title="Net Payoff (Quote CCY)", hovermode="x unified", margin=dict(l=0, r=0, t=30, b=0))
     st.plotly_chart(fig, use_container_width=True)
+
+def show_main_calculator():
+    st.set_page_config(page_title="FX Options Toolkit", layout="wide")
+    # 使用 Streamlit Tabs 將功能模組化分類
+    tab1, tab2 = st.tabs(["Vanilla Calculator", "Volatility Smile Generator"])
+    with tab1:
+        show_vanilla_calculator()
+    with tab2:
+        show_vol_smile_module()

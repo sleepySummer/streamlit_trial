@@ -9,7 +9,7 @@ from mortgage_calculator import show_calculator
 from fx_forward_calculator import show_fx_calculator 
 from fx_atm_calculator import show_atm_calculator 
 from stock_option_calculator import show_stock_option_calculator
-from fx_vanilla_calculator import show_vanilla_calculator
+from fx_vanilla_calculator import show_main_calculator
 
 # ──────────────登入系統模組───────────
 import streamlit_authenticator as stauth
@@ -70,7 +70,8 @@ if st.session_state["authentication_status"]:
     elif app_mode == "Stock/ETF Option Calculator":
         show_stock_option_calculator()
     elif app_mode == "FX Vanilla Option Calculator":
-        show_vanilla_calculator()
+        show_main_calculator()
+
 elif st.session_state["authentication_status"] is False:
     st.error('帳號或密碼錯誤')
 elif st.session_state["authentication_status"] is None:
